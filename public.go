@@ -11,14 +11,14 @@ var (
 )
 
 func Ready() {
-	// initial reload
-	reload()
-
 	// close old ticker if exist
 	if reloadTicker != nil {
 		reloadTicker.Stop()
 		tickerQuit <- struct{}{}
 	}
+
+	// initial reload
+	reload()
 
 	// start new ticker
 	reloadTicker = time.NewTicker(time.Duration(CfgReloadInterval()) * time.Second)

@@ -6,7 +6,7 @@ import (
 )
 
 func logf(f string, v ...interface{}) {
-	fmt.Fprintf(os.Stdout, "[txlog] "+f+"\n", v...)
+	fmt.Fprintf(os.Stdout, "[confy] "+f+"\n", v...)
 }
 
 func panicf(f string, v ...interface{}) {
