@@ -30,7 +30,7 @@ fmt.Printf("refresh.interval:[%v]", confy.Duration("app.refresh.interval"))
 #### Options
 confy enables user change options with command argument like  `./yourapp --confy-<opt>`. Following are valid options.
 
-| Command | Default Value |  Description |
+| Option | Default Value |  Description |
 | --- | --- | --- |
 | --confy-file | ./app.confy | the full path of local configuration file |
 | --confy-url | n/a | the url of remote configuration file. note it will overwrite local configuration if valid |
