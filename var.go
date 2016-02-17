@@ -25,7 +25,7 @@ func CfgURL() string {
 }
 
 func CfgReloadInterval() int {
-	if i := *configInterval; i >= 10 {
+	if i := *configInterval; i >= 1 {
 		return i
 	}
 

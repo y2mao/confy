@@ -1,12 +1,13 @@
 package confy
 
-import (
-	"fmt"
-	"os"
-)
+import "fmt"
 
 func logf(f string, v ...interface{}) {
-	fmt.Fprintf(os.Stdout, "[confy] "+f+"\n", v...)
+	s := fmt.Sprintf("[confy] "+f+"\n", v...)
+
+	if Logger != nil {
+		Logger(s)
+	}
 }
 
 func panicf(f string, v ...interface{}) {

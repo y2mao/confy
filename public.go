@@ -7,6 +7,7 @@ import (
 )
 
 var (
+	Logger        func(s string)
 	ReloadHandler func(map[string]interface{})
 )
 
@@ -21,7 +22,9 @@ func Ready() {
 	reload()
 
 	// start new ticker
-	reloadTicker = time.NewTicker(time.Duration(CfgReloadInterval()) * time.Second)
+	d := time.Duration(CfgReloadInterval()) * time.Second
+	logf("start ticker and trigger it every %fs", d.Seconds())
+	reloadTicker = time.NewTicker(d)
 	go reloadTimely()
 }
 

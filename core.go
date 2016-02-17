@@ -110,15 +110,21 @@ var (
 )
 
 func reloadTimely() {
-	for {
-		select {
-		case <-reloadTicker.C:
-			reload()
-		case <-tickerQuit:
-			reloadTicker.Stop()
-			return
-		}
+	for t := range reloadTicker.C {
+		logf("ticker fired at %v", t)
+		reload()
 	}
+	/*
+		for {
+			select {
+			case <-reloadTicker.C:
+				reload()
+			case <-tickerQuit:
+				reloadTicker.Stop()
+				return
+			}
+		}
+	*/
 }
 
 func getVal(name string) (elem, bool) {
@@ -139,16 +145,29 @@ func reload() {
 	var data []byte
 	var m = make(map[string]interface{})
 
+	defer func() {
+		// trigger reloadHandler for further process of app, such as logging
+		if ReloadHandler != nil {
+			ReloadHandler(m)
+		}
+	}()
+
 	// 1. load data from file and URL
 	// file data will be overwritten if URL is valid
 	if s := CfgFile(); s != "" {
 		if b, err := loadFromFile(s); err == nil {
 			data = b
+			logf("file loaded[%d] (%s)", len(data), s)
+		} else {
+			logf("file missing: %v (%s)", err, s)
 		}
 	}
 	if s := CfgURL(); s != "" {
 		if b, err := loadFromURL(s); err == nil {
 			data = b
+			logf("url loaded[%d] (%s)", len(data), s)
+		} else {
+			logf("url missing: %v (%s)", err, s)
 		}
 	}
 
@@ -164,14 +183,12 @@ func reload() {
 		return
 	} else {
 		signature = sum
+		logf("new signature:%s", signature)
 	}
 
 	// 3. parse data to m
 	if err := json.Unmarshal(data, &m); err != nil {
-		panicf("parsing config data failed. %v. data:%s",
-			err,
-			string(data),
-		)
+		panicf("parsing config data failed. %v", err)
 	}
 
 	// 4. validate kind and assign m to memMap
@@ -190,11 +207,6 @@ func reload() {
 		}
 
 		setVal(name, elem{name, kind, castV})
-	}
-
-	// 5. trigger reloadHandler for further process of app, such as logging
-	if ReloadHandler != nil {
-		ReloadHandler(m)
 	}
 }
 
