@@ -1,6 +1,6 @@
 # confy
 
-confy is a lightweight configuration module for your app. It's quiet simple and easy to use.
+confy is a lightweight configuration module for your app. It's quite simple and easy to use.
 
 #### Usage
 
