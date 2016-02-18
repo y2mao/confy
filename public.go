@@ -33,12 +33,31 @@ func Define(name string, defaultValue interface{}) {
 	v, kind := cast(defaultValue)
 
 	// dupldate check
-	if _, ok := getVal(name); ok {
-		panicf("duplicate name: %s", name)
+	if e, ok := getVal(name); ok {
+		if e.defined {
+			// if element exist in map with same name
+			// and defined before, then panic
+			panicf("duplicate name: %s", name)
+		} else {
+			// otherwise, validate the exist element's kind
+			if e.kind != kind {
+				panicf(
+					`invalid kind for "%s". %v(%s) -> %v(%s)`,
+					name,
+					defaultValue, kindName(kind),
+					e.val, kindName(e.kind),
+				)
+			} else {
+				// if kind is same.
+				// just set property "defined" to true
+				e.defined = true
+				setVal(name, e)
+			}
+		}
+	} else {
+		// assignment
+		setVal(name, elem{name, kind, v, true})
 	}
-
-	// assignment
-	setVal(name, elem{name, kind, v})
 }
 
 func Int(name string) int64 {

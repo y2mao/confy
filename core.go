@@ -95,9 +95,10 @@ func cast(originVal interface{}) (v interface{}, kind int) {
 }
 
 type elem struct {
-	name string
-	kind int
-	val  interface{}
+	name    string
+	kind    int
+	val     interface{}
+	defined bool
 }
 
 var (
@@ -194,6 +195,7 @@ func reload() {
 	// 4. validate kind and assign m to memMap
 	for name, newV := range m {
 		castV, kind := cast(newV)
+		e := elem{name, kind, castV, false}
 
 		if oldElem, ok := getVal(name); ok {
 			// validate kind and assign
@@ -204,9 +206,13 @@ func reload() {
 					kindName(oldElem.kind),
 				)
 			}
+
+			// only "Define" function can change "defined" proerty to true.
+			// in this situation, keep the value no change.
+			e.defined = oldElem.defined
 		}
 
-		setVal(name, elem{name, kind, castV})
+		setVal(name, e)
 	}
 }
 
