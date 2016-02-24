@@ -15,7 +15,6 @@ func Ready() {
 	// close old ticker if exist
 	if reloadTicker != nil {
 		reloadTicker.Stop()
-		tickerQuit <- struct{}{}
 	}
 
 	// initial reload
@@ -40,6 +39,11 @@ func Define(name string, defaultValue interface{}) {
 			panicf("duplicate name: %s", name)
 		} else {
 			// otherwise, validate the exist element's kind
+			if kind == kindInt64 && e.kind == kindFloat64 {
+				e.kind = kindInt64
+				e.val = int64(e.val.(float64))
+			}
+
 			if e.kind != kind {
 				panicf(
 					`invalid kind for "%s". %v(%s) -> %v(%s)`,

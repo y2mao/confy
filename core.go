@@ -107,25 +107,12 @@ var (
 
 	reloadLock   sync.Mutex
 	reloadTicker *time.Ticker
-	tickerQuit   = make(chan struct{})
 )
 
 func reloadTimely() {
-	for t := range reloadTicker.C {
-		logf("ticker fired at %v", t)
+	for _ = range reloadTicker.C {
 		reload()
 	}
-	/*
-		for {
-			select {
-			case <-reloadTicker.C:
-				reload()
-			case <-tickerQuit:
-				reloadTicker.Stop()
-				return
-			}
-		}
-	*/
 }
 
 func getVal(name string) (elem, bool) {
@@ -140,8 +127,6 @@ func setVal(name string, e elem) {
 func reload() {
 	reloadLock.Lock()
 	defer reloadLock.Unlock()
-
-	logf("start reloading")
 
 	var data []byte
 	var m = make(map[string]interface{})
