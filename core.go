@@ -6,104 +6,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"reflect"
 	"sync"
 	"time"
 )
 
-const (
-	kindInt64 = iota
-	kindFloat64
-	kindString
-	kindBool
-	kindTime
-	kindDuration
-)
-
-func kindName(kind int) string {
-	switch kind {
-	case kindInt64:
-		return "int64"
-	case kindFloat64:
-		return "float64"
-	case kindString:
-		return "string"
-	case kindBool:
-		return "bool"
-	case kindTime:
-		return "time"
-	case kindDuration:
-		return "duration"
-	}
-
-	return "n/a"
-}
-
-func cast(originVal interface{}) (v interface{}, kind int) {
-	switch originVal.(type) {
-	case int:
-		v = int64(originVal.(int))
-		kind = kindInt64
-	case int16:
-		v = int64(originVal.(int16))
-		kind = kindInt64
-	case int32:
-		v = int64(originVal.(int32))
-		kind = kindInt64
-	case int64:
-		v = originVal.(int64)
-		kind = kindInt64
-	case uint:
-		v = int64(originVal.(uint))
-		kind = kindInt64
-	case uint16:
-		v = int64(originVal.(uint16))
-		kind = kindInt64
-	case uint32:
-		v = int64(originVal.(uint32))
-		kind = kindInt64
-	case uint64:
-		v = int64(originVal.(uint64))
-		kind = kindInt64
-	case float32:
-		v = float64(originVal.(float32))
-		kind = kindFloat64
-	case float64:
-		v = float64(originVal.(float64))
-		kind = kindFloat64
-	case string:
-		v = originVal.(string)
-		kind = kindString
-	case bool:
-		v = originVal.(bool)
-		kind = kindBool
-	case time.Time:
-		v = originVal.(time.Time)
-		kind = kindTime
-	case time.Duration:
-		v = originVal.(time.Duration)
-		kind = kindDuration
-	default:
-		panicf(
-			"invalid type:%s, val:%v",
-			reflect.TypeOf(originVal).String(),
-			originVal,
-		)
-	}
-
-	return
-}
-
-type elem struct {
-	name    string
-	kind    int
-	val     interface{}
-	defined bool
-}
-
 var (
 	signature string
-	memMap    = make(map[string]elem)
+	memMap    = make(map[string]*elem)
 
 	reloadLock   sync.Mutex
 	reloadTicker *time.Ticker
@@ -115,13 +24,26 @@ func reloadTimely() {
 	}
 }
 
-func getVal(name string) (elem, bool) {
-	v, ok := memMap[name]
-	return v, ok
+func getElemFromMap(name string) *elem {
+	e, ok := memMap[name]
+	if !ok {
+		panicf("missing config name: %s", name)
+	}
+
+	return e
 }
 
-func setVal(name string, e elem) {
-	memMap[name] = e
+func define(name string, defaultValue interface{}) {
+	reloadLock.Lock()
+	defer reloadLock.Unlock()
+
+	v := castToString(defaultValue)
+
+	if e, ok := memMap[name]; ok {
+		e.Define(v)
+	} else {
+		memMap[name] = newElem(name, v)
+	}
 }
 
 func reload() {
@@ -179,25 +101,12 @@ func reload() {
 
 	// 4. validate kind and assign m to memMap
 	for name, newV := range m {
-		castV, kind := cast(newV)
-		e := elem{name, kind, castV, false}
-
-		if oldElem, ok := getVal(name); ok {
-			// validate kind and assign
-			if oldElem.kind != kind {
-				panicf(
-					"new config kind doesn't match current one. %s -> %s",
-					kindName(kind),
-					kindName(oldElem.kind),
-				)
-			}
-
-			// only "Define" function can change "defined" proerty to true.
-			// in this situation, keep the value no change.
-			e.defined = oldElem.defined
+		v := castToString(newV)
+		if oe, ok := memMap[name]; ok {
+			oe.Set(v)
+		} else {
+			memMap[name] = newElem(name, v)
 		}
-
-		setVal(name, e)
 	}
 }
 
@@ -222,4 +131,12 @@ func loadFromURL(url string) (b []byte, err error) {
 	b, err = ioutil.ReadAll(resp.Body)
 
 	return
+}
+
+func castToString(v interface{}) string {
+	if t, ok := v.(time.Time); ok {
+		return t.Format(TIME_FORMAT)
+	} else {
+		return fmt.Sprintf("%v", v)
+	}
 }
