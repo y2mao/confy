@@ -8,19 +8,7 @@ var (
 )
 
 func Ready() {
-	// close old ticker if exist
-	if reloadTicker != nil {
-		reloadTicker.Stop()
-	}
 
-	// initial reload
-	reload()
-
-	// start new ticker
-	d := time.Duration(CfgReloadInterval()) * time.Second
-	logf("start ticker and trigger it every %fs", d.Seconds())
-	reloadTicker = time.NewTicker(d)
-	go reloadTimely()
 }
 
 func Define(name string, defaultValue interface{}) {

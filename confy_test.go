@@ -1,7 +1,6 @@
 package confy
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"strconv"
@@ -10,9 +9,6 @@ import (
 )
 
 func TestConfy(t *testing.T) {
-	//flag.Set("confy-url", "http://www.oa.com")
-	flag.Set("confy-interval", "2")
-
 	Logger = func(s string) {
 		os.Stdout.WriteString(s)
 	}

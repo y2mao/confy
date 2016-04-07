@@ -6,6 +6,7 @@ var (
 	configFile     = flag.String("confy-file", "", "")
 	configURL      = flag.String("confy-url", "", "")
 	configInterval = flag.Int("confy-interval", 60, "")
+	configNoLog    = flag.Bool("confy-nolog", false, "")
 )
 
 const (
@@ -34,4 +35,8 @@ func CfgReloadInterval() int {
 	}
 
 	return 60
+}
+
+func CfgNoLog() bool {
+	return *configNoLog
 }

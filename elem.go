@@ -11,14 +11,18 @@ type elem struct {
 	val  string
 
 	defined    bool
+	assigned   bool
 	defineLock sync.Mutex
 }
 
 func newElem(name string, val string) *elem {
-	e := elem{}
-	e.name = name
-	e.val = val
+	e := elem{
+		name:     name,
+		val:      val,
+		assigned: true,
+	}
 
+	logf("NEW %-10s -> %s", e.name, e.val)
 	return &e
 }
 
@@ -27,15 +31,22 @@ func (e *elem) Define(v string) {
 	defer e.defineLock.Unlock()
 
 	if e.defined {
-		panicf("duplicate definition for config name: %s", e.name)
+		panicf("duplicate config definition: %s", e.name)
 	}
 
 	e.defined = true
-	e.val = v
+
+	if !e.assigned {
+		e.val = v
+		logf("DEF %-10s -> %s", e.name, e.val)
+	} else {
+		logf("IGN %-10s != %s", e.name, e.val)
+	}
 }
 
 func (e *elem) Set(v string) {
-	e.val = v
+	e.assigned, e.val = true, v
+	logf("SET %-10s -> %s", e.name, e.val)
 }
 
 func (e *elem) GetString() string {

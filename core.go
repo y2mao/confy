@@ -87,11 +87,11 @@ func reload() {
 	}
 
 	if sum := fmt.Sprintf("%x", sha1.Sum(data)); sum == signature {
-		logf("same signature - ignored")
+		logf("same signature - ignored (%s)", signature)
 		return
 	} else {
 		signature = sum
-		logf("new signature:%s", signature)
+		logf("new signature (%s)", signature)
 	}
 
 	// 3. parse data to m
