@@ -53,7 +53,10 @@ func reload() {
 	var data []byte
 	var m = make(map[string]interface{})
 
+	logf("perform reload at %s", time.Now().Format(TIME_FORMAT))
 	defer func() {
+		logf("reload finished at %s", time.Now().Format(TIME_FORMAT))
+
 		// trigger reloadHandler for further process of app, such as logging
 		if ReloadHandler != nil {
 			ReloadHandler(m)

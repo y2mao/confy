@@ -15,6 +15,20 @@ type elem struct {
 	defineLock sync.Mutex
 }
 
+func actionlog(act string, name string, before string, after string) {
+	if before == after {
+		logf("%s %-10s: no change (current: %s)", act, name, before)
+		return
+	}
+
+	if before == "" {
+		logf("%s %-30s: %s", act, name, after)
+		return
+	}
+
+	logf("%s %-30s: %s -> %s", act, name, before, after)
+}
+
 func newElem(name string, val string) *elem {
 	e := elem{
 		name:     name,
@@ -22,7 +36,7 @@ func newElem(name string, val string) *elem {
 		assigned: true,
 	}
 
-	logf("NEW %-10s -> %s", e.name, e.val)
+	actionlog("NEW", name, "", val)
 	return &e
 }
 
@@ -37,16 +51,16 @@ func (e *elem) Define(v string) {
 	e.defined = true
 
 	if !e.assigned {
+		actionlog("DEF", e.name, e.val, v)
 		e.val = v
-		logf("DEF %-10s -> %s", e.name, e.val)
 	} else {
-		logf("IGN %-10s != %s", e.name, e.val)
+		actionlog("IGN", e.name, e.val, v)
 	}
 }
 
 func (e *elem) Set(v string) {
+	actionlog("SET", e.name, e.val, v)
 	e.assigned, e.val = true, v
-	logf("SET %-10s -> %s", e.name, e.val)
 }
 
 func (e *elem) GetString() string {
